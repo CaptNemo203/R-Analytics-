@@ -1,7 +1,8 @@
 ---
-output:
-  pdf_document: default
-  html_document: default
+title: "WorkSheet 5b R Analytics"
+author: "Malayas, Pauchano, Madayag BSIT 2A "
+date: "2024-12-12"
+output: pdf_document
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

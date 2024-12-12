@@ -1,8 +1,9 @@
 ---
-title: 'WorkSheet #5'
-author: "Malayas, Pauchano, Madayag BSIT2A"
+title: 'WorkSheet 5a R Analytics'
+author: "Malayas, Pauchano, Madayag BSIT 2A "
 date: "2024-11-09"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 ---
@@ -319,3 +320,120 @@ If we use the retrieved data, we can try to determine the value for money provid
 The graph enables easy comparison of how well each category performs in terms of value for money. Categories with taller bars show a greater rating-to-price ratio, implying better perceived value for money.
 
 
+```{r}
+df_combined <- rbind(
+  cbind(gpu_category, Product_Name = gpu_category$Description, Category = "GPU"),
+  cbind(cpu_category, Product_Name = cpu_category$Description, Category = "CPU"),
+  cbind(headset_category, Product_Name = headset_category$Description, Category = "Headset"),
+  cbind(camera_category, Product_Name = camera_category$Description, Category = "Camera"),
+  cbind(keyboard_category, Product_Name = keyboard_category$Description, Category = "Keyboard")
+)
+
+df_combined$Price <- as.numeric(as.character(df_combined$Price))
+df_combined$Ratings <- as.numeric(as.character(df_combined$Ratings))
+
+df_combined <- df_combined %>% 
+  mutate(rating_to_price_ratio = Ratings / Price)
+
+categories <- unique(df_combined$Category)
+
+par(mfrow = c(ceiling(length(categories) / 2), 2))
+
+for (category in categories) {
+  category_products <- df_combined %>% filter(Category == category)
+  short_name <- sapply(category_products$Description, function(x) {
+    paste(strsplit(x, " ")[[1]][1:2], collapse = " ")
+  })
+  
+  barplot(
+    category_products$rating_to_price_ratio,
+    names.arg = short_name,
+    main = paste("Rating to Price Ratio for", category),
+    ylab = "Rating to Price Ratio",
+    col = rainbow(nrow(category_products)),
+    las = 2,
+    cex.names = 0.5
+  )
+}
+```
+9. Graph the Price and Ratings for Each Category
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Base R Plotting
+par(mfrow = c(2, 3))  
+
+for (cat in unique(df_combined$Category)) {
+  data <- df_combined[df_combined$Category == cat, ]
+  
+  plot(
+    data$Price, data$Ratings,
+    main = paste("Price vs Rating -", cat),
+    xlab = "Price",
+    ylab = "Rating",
+    col = "blue",
+    pch = 19  
+  )
+}
+
+# ggplot2 Visualization
+ggplot(df_combined, aes(x = Price, y = Ratings, color = Category)) +
+  geom_point() +
+  facet_wrap(~Category) +  
+  labs(title = "Price vs. Rating by Category", x = "Price", y = "Rating") +
+  theme_minimal()
+```
+10. Rank the Products of Each Category by Price and Ratings
+```{r}
+library(dplyr)
+
+# GPU
+gpu_ranked <- gpu_category %>% 
+  mutate(
+    Rank_by_Price = rank(Price, ties.method = "min"),  
+    Rank_by_Rating = rank(-Ratings, ties.method = "min")  
+  ) %>% 
+  arrange(Rank_by_Price, Rank_by_Rating)
+
+# CPU
+cpu_ranked <- cpu_category %>% 
+  mutate(
+    Rank_by_Price = rank(Price, ties.method = "min"),  
+    Rank_by_Rating = rank(-Ratings, ties.method = "min")  
+  ) %>% 
+  arrange(Rank_by_Price, Rank_by_Rating)
+
+# Headset
+headset_ranked <- headset_category %>% 
+  mutate(
+    Rank_by_Price = rank(Price, ties.method = "min"),  
+    Rank_by_Rating = rank(-Ratings, ties.method = "min")  
+  ) %>% 
+  arrange(Rank_by_Price, Rank_by_Rating)
+
+# Camera
+camera_ranked <- camera_category %>% 
+  mutate(
+    Rank_by_Price = rank(Price, ties.method = "min"),  
+    Rank_by_Rating = rank(-Ratings, ties.method = "min")  
+  ) %>% 
+  arrange(Rank_by_Price, Rank_by_Rating)
+
+# Keyboard
+keyboard_ranked <- keyboard_category %>% 
+  mutate(
+    Rank_by_Price = rank(Price, ties.method = "min"),  
+    Rank_by_Rating = rank(-Ratings, ties.method = "min")  
+  ) %>% 
+  arrange(Rank_by_Price, Rank_by_Rating)
+
+print(gpu_ranked)
+print(cpu_ranked)
+print(headset_ranked)
+print(camera_ranked)
+print(keyboard_ranked)
+
+```
+# Explanation.
+# The data frames show products sorted by category, with each product's name and description, as well as its rank based on price (lower prices result in higher ranks) and rating. Ties are broken by prioritizing higher rankings.
