@@ -72,7 +72,7 @@ cleaned_votes <- gsub('[()]', '', tv_votes)
 ```{r}
 # Extract episode counts 
 episode_counts <- read_html(imdb_url) %>%
-  html_nodes('span.sc-5bc66c50-6.OOdsw.cli-title-metadata-item:nth-of-type(2)') %>%
+  html_nodes('span.sc-300a8231-7.eaXxft.cli-title-metadata-item:nth-of-type(2)') %>%
   html_text()
 cleaned_episodes <- gsub('[eps]', '', episode_counts)
 episode_counts_num <- as.numeric(cleaned_episodes)
@@ -82,7 +82,7 @@ episode_counts_num <- as.numeric(cleaned_episodes)
 ```{r}
 # Extract release years
 release_years <- read_html(imdb_url) %>%
-  html_nodes('span.sc-5bc66c50-6.OOdsw.cli-title-metadata-item:nth-of-type(1)') %>%
+  html_nodes('span.sc-300a8231-7.eaXxft.cli-title-metadata-item:nth-of-type(1)') %>%
   html_text()
 ```
 
@@ -166,11 +166,82 @@ five_shows_url_df <- data.frame(
 ) 
 
 ```
+
 ```{r}
+#  to scrape reviews
+scrape_reviews <- function(show_url) {
+  page <- read_html(show_url)
+  
+  #  usernames
+  usernames <- page %>%
+    html_nodes('[data-testid="author-link"]') %>%
+    html_text()
+  
+  #  review dates
+  review_dates <- page %>%
+    html_nodes('li.review-date') %>%
+    html_text()
+  
+  #  user ratings
+  user_rating <- page %>%
+    html_nodes('span.ipc-rating-star--rating') %>%
+    html_text()
+  
+  # Extract review titles
+  rev_title <- page %>%
+    html_nodes('h3.ipc-title__text') %>%
+    html_text()
+  
+  #  user text reviews
+  text_rev <- page %>%
+    html_nodes('div.ipc-html-content-inner-div') %>%
+    html_text()
+  
+  #  helpful review counts
+  helpful_rev <- page %>%
+    html_nodes('div.ipc-list-card__actions') %>%
+    html_text()
+  
+  #  not helpful review counts
+  not_helpful <- page %>%
+    html_nodes('span.count--down') %>%
+    html_text()
+  
+  data.frame(
+    Usernames = head(usernames, 20), 
+    Dates = head(review_dates, 20),
+    User_Rating = head(user_rating, 20), 
+    Review_Title = head(rev_title, 20),
+    Text_Reviews = head(text_rev, 20)
+    )
+}
+
+reviews_data <- lapply(five_shows_url_df$URLs, scrape_reviews)
+names(reviews_data) <- five_shows_url_df$Title
+reviews_data[["Breaking Bad"]]
+reviews_data[["Planet Earth II"]]
+reviews_data[["Band of Brothers"]]
+reviews_data[["Chernobyl"]]
+reviews_data[["Game of Thrones"]]
+
+# Time series analysis of TV show releases by year and identifying the year with the highest number of releases
+
+library(ggplot2)
+years <- substr(release_years, 1, 4)
+years <- as.numeric(years)      
+
+ggplot(data.frame(Year = years), aes(x = Year)) +
+  geom_line(stat = "count", color = "blue") +
+  labs(title = "Number of TV Shows Released by Year",
+       x = "Year",
+       y = "Number of TV Shows") +
+  theme_minimal()
+
+most_shows_year <- as.data.frame(table(years))
+most_shows_year <- most_shows_year[which.max(most_shows_year$Freq), ]
+print(most_shows_year)
 
 ```
-
-
 
 
 
