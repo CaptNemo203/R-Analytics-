@@ -86,9 +86,89 @@ release_years <- read_html(imdb_url) %>%
   html_text()
 ```
 
+```{r}
+top_tv_shows_df <- data.frame(
+  Rank = ranked_titles_df[,1],
+  Title = ranked_titles_df[,2],
+  Rating = tv_ratings[1:50],  # Adjusted to match 50 titles
+  Votes = cleaned_votes[1:50],  # Adjusted to match 50 titles
+  Episodes = episode_counts_num[1:50],  # Adjusted to match 50 titles
+  Year = release_years[1:50]  # Adjusted to match 50 titles
+)
+```
+
+```{r}
+# Extracting links to user review pages
+imdb_homepage <- 'https://www.imdb.com/chart/toptv/'
+main_page <- read_html(imdb_homepage)
+
+show_links <- main_page %>%
+  html_nodes("a.ipc-title-link-wrapper") %>%
+  html_attr("href")
+
+# to retrieve each show's page link
+user_review_data <- lapply(show_links, function(show_link) {
+  complete_show_link <- paste0("https://imdb.com", show_link)
+  
+  # Loop to find the user review page link
+  review_page_html <- read_html(complete_show_link)
+  review_page_link <- review_page_html %>%
+    html_nodes('a.isReview') %>%
+    html_attr("href")
+  
+  # to gather user reviews for each show
+  review_count_html <- read_html(paste0("https://imdb.com", review_page_link[1]))
+  review_count <- review_count_html %>%
+    html_nodes('[data-testid="tturv-total-reviews"]') %>%
+    html_text()
+  
+  # to gather critic reviews
+  critic <- review_page_html %>%
+    html_nodes("span.score") %>%
+    html_text()
+  critic_df <- data.frame(Critic_Reviews = critic[2], stringsAsFactors = FALSE)
+  
+  # to gather popularity ratings
+  pop_rating <- review_page_html %>%
+    html_nodes('[data-testid="hero-rating-bar__popularity__score"]') %>%
+    html_text()
+  pop_rating_df <- data.frame(Popularity_Rating = pop_rating[2], stringsAsFactors = FALSE)
+  
+  return(data.frame(User_Reviews = review_count, Critic = critic_df, pop = pop_rating_df)) 
+})
+
+user_reviews_df <- do.call(rbind, user_review_data)
+final_tv_show_data <- cbind(top_tv_shows_df, user_reviews_df)
+final_tv_show_data
+
+```
 
 
+```{r}
+# 5 TV shows to scrape 20 user reviews
+url_of_5Shows <- c(
+  "https://www.imdb.com/title/tt0903747/reviews/?ref_=ttexr_ql_2",
+  "https://www.imdb.com/title/tt5491994/reviews/?ref_=tt_ov_ql_2",
+  "https://www.imdb.com/title/tt0185906/reviews/?ref_=tt_ov_ql_2",
+  "https://www.imdb.com/title/tt7366338/reviews/?ref_=tt_ov_ql_2",
+  "https://www.imdb.com/title/tt0944947/reviews/?ref_=tt_ov_ql_2"
+)
 
+five_shows_url_df <- data.frame(
+  Title = c(
+    "Breaking Bad",
+    "Planet Earth II",
+    "Band of Brothers",
+    "Chernobyl", 
+    "Game of Thrones"
+  ),
+  URLs = url_of_5Shows
+) 
+
+```
+```{r}
+
+```
 
 
 
